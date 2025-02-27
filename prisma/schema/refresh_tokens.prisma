@@ -1,0 +1,11 @@
+model RefreshToken {
+    id        String  @unique
+    token     String  @unique
+    isRevoked Boolean @default(false) @map("is_revoked")
+
+    nextTokenId   String?       @unique @map("next_token")
+    nextToken     RefreshToken? @relation("NextToken", fields: [nextTokenId], references: [id])
+    previousToken RefreshToken? @relation("NextToken")
+
+    @@map("refresh_tokens")
+}

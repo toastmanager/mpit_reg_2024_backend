@@ -1,0 +1,19 @@
+{
+    email example@example.com
+}
+
+localhost {
+    handle_path /files* {
+        root * /srv
+        file_server browse
+    }
+    reverse_proxy backend:8000
+}
+
+storage.localhost:9001 {
+    reverse_proxy storage:9001
+}
+
+storage.localhost {
+    reverse_proxy storage:9000
+}

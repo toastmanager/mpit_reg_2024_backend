@@ -1,0 +1,23 @@
+name: Nest.js CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to VPS via SSH
+    runs-on: ubuntu-latest
+    steps:
+      - name: connect and pull
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_WORK_DIR }}
+            git checkout ${{ secrets.DEPLOYMENT_BRANCH }}
+            git pull
+            docker compose up -d --build

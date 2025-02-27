@@ -1,0 +1,11 @@
+.dockerignore
+.env.example
+.git
+Caddyfile
+Caddyfile.example
+Dockerfile
+README.md
+coverage
+docker-compose.yml
+node_modules
+npm-debug.log
