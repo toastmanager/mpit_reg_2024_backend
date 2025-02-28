@@ -1,9 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MainPostersStorage } from '../main-posters.storage';
 import { PrismaService } from '../../prisma.service';
 import { PrismaClient } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
-import { ExtraPostersStorage } from '../extra-posters.storage';
 import { ActivityReviewsService } from './activity-reviews.service';
 
 describe('EventsService', () => {
