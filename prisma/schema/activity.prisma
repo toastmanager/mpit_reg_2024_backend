@@ -7,7 +7,7 @@ model Activity {
     author           User             @relation(fields: [authorId], references: [id])
     type             ActivityType
     price            Float
-    date             DateTime
+    dates            ActivityDate[]
     paymentUrl       String           @map("payment_url")
     reviews          ActivityReview[]
     tags             ActivityTag[]
@@ -16,6 +16,13 @@ model Activity {
     updatedAt DateTime @updatedAt @map("updated_at")
 
     @@map("activities")
+}
+
+model ActivityDate {
+    id         Int      @id @default(autoincrement())
+    activityId Int
+    activity   Activity @relation(fields: [activityId], references: [id])
+    date       DateTime
 }
 
 enum ActivityType {

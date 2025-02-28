@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { MainPostersStorage } from './main-posters.storage';
-import { Activity, ActivityReview, Prisma } from '@prisma/client';
+import { Activity, ActivityReview, ActivityType, Prisma } from '@prisma/client';
 import { ActivityDto } from './dto/activity.dto';
 import { ExtraPostersStorage } from './extra-posters.storage';
 import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
 import { UsersService } from '../users/users.service';
 import { ActivityReviewsService } from './reviews/activity-reviews.service';
+import { CategoryDto } from './dto/category.dto';
 
 @Injectable()
 export class ActivitiesService {
@@ -60,10 +61,28 @@ export class ActivitiesService {
 
     const score = await this.calcScore({ id: activity.id });
 
+    const firstDate = await this.prisma.activityDate.findFirst({
+      select: {
+        date: true,
+      },
+      where: {
+        activity: {
+          id: activity.id,
+        },
+        date: {
+          gte: new Date(),
+        },
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+
     return {
       ...activity,
       mainPosterUrl: mainPosterUrl ?? '',
       extraPostersUrls: extraPostersUrls,
+      date: firstDate?.date ?? new Date(),
       score: score ?? 0,
     };
   }
@@ -244,5 +263,86 @@ export class ActivitiesService {
 
     const score = sum / reviewsNum;
     return score;
+  }
+
+  async getCategories(): Promise<CategoryDto[]> {
+    const comingActivitiesDates = await this.prisma.activityDate.findMany({
+      where: {
+        date: {
+          gte: new Date(),
+        },
+        activity: {
+          type: {
+            notIn: [ActivityType.MOVIE],
+          },
+        },
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+
+    const comingActivitiesIds: Set<number> = new Set();
+    const comingActivities: ActivityDto[] = [];
+    for (const activityDate of comingActivitiesDates) {
+      const activity = await this.findUnique({
+        where: {
+          id: activityDate.activityId,
+        },
+      });
+      if (!activity || comingActivitiesIds.has(activity.id)) {
+        continue;
+      }
+      const activityDto = await this.getActivityDto({
+        activity,
+      });
+      comingActivities.push(activityDto);
+      comingActivitiesIds.add(activity.id);
+    }
+
+    const comingMoviesDates = await this.prisma.activityDate.findMany({
+      where: {
+        date: {
+          gte: new Date(),
+        },
+        activity: {
+          type: {
+            equals: ActivityType.MOVIE,
+          },
+        },
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+
+    const comingMoviesIds: Set<number> = new Set();
+    const comingMovies: ActivityDto[] = [];
+    for (const movieDate of comingMoviesDates) {
+      const movie = await this.findUnique({
+        where: {
+          id: movieDate.activityId,
+        },
+      });
+      if (!movie || comingMoviesIds.has(movie.id)) {
+        continue;
+      }
+      const activityDto = await this.getActivityDto({
+        activity: movie,
+      });
+      comingMovies.push(activityDto);
+      comingActivitiesIds.add(movie.id);
+    }
+
+    return [
+      {
+        title: 'События в ближайшие дни',
+        activities: [...comingActivities],
+      },
+      {
+        title: 'Уже в кино',
+        activities: [...comingMovies],
+      },
+    ];
   }
 }

@@ -31,6 +31,7 @@ import { MainPostersStorage } from './main-posters.storage';
 import { ActivityReviewsService } from './reviews/activity-reviews.service';
 import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
 import { CreateActivityReviewDto } from './reviews/dto/create-activity-review.dto';
+import { CategoryDto } from './dto/category.dto';
 
 @Controller('activities')
 export class ActivitiesController {
@@ -404,5 +405,16 @@ export class ActivitiesController {
     });
 
     return reviewDto;
+  }
+
+  @Get('categories')
+  @ApiOkResponse({
+    type: CategoryDto,
+    isArray: true,
+  })
+  async findAllCategories(): Promise<CategoryDto[]> {
+    const categories = await this.activitiesService.getCategories();
+
+    return categories;
   }
 }
