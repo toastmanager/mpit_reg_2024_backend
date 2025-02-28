@@ -52,7 +52,7 @@ export class ActivitiesService {
     const { activity } = args;
 
     const mainPosterUrl = await this.mainPostersStorage.getUrl({
-      objectKey: activity.mainPosterKey,
+      objectKey: activity.id.toString(),
     });
     const extraPostersUrls = await this.extraPostersStorage.getUrls({
       objectKeys: activity.extraPostersKeys,
@@ -64,7 +64,7 @@ export class ActivitiesService {
       ...activity,
       mainPosterUrl: mainPosterUrl ?? '',
       extraPostersUrls: extraPostersUrls,
-      score: score,
+      score: score ?? 0,
     };
   }
 
@@ -92,6 +92,7 @@ export class ActivitiesService {
     const objectKey = await this.mainPostersStorage.put({
       filename: id.toString(),
       file: file.buffer,
+      generateFilename: false,
     });
     return objectKey;
   }
@@ -216,7 +217,7 @@ export class ActivitiesService {
     return dtos;
   }
 
-  async calcScore(args: { id: number }): Promise<number> {
+  async calcScore(args: { id: number }): Promise<number | null> {
     const { id } = args;
 
     const reviews: { score: number }[] =
@@ -230,6 +231,10 @@ export class ActivitiesService {
           score: true,
         },
       });
+
+    if (!reviews || reviews.length == 0) {
+      return null;
+    }
 
     const reviewsNum = reviews.length;
     let sum = 0;

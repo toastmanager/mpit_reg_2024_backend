@@ -2,7 +2,6 @@ model Activity {
     id               Int              @id @default(autoincrement())
     title            String
     description      String
-    mainPosterKey    String           @default("") @map("main_poster_key")
     extraPostersKeys String[]         @map("extra_posters")
     authorId         Int              @map("author_id")
     author           User             @relation(fields: [authorId], references: [id])
