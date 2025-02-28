@@ -1,0 +1,29 @@
+model Activity {
+    id            Int          @id @default(autoincrement())
+    title         String
+    description   String
+    mainPosterKey String       @default("") @map("main_poster_key")
+    media         String[]
+    author        User         @relation(fields: [userId], references: [id])
+    type          ActivityType
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    userId    Int
+
+    @@map("activities")
+}
+
+enum ActivityType {
+    MOVIE
+    MASTER_CLASS
+    CONCERT
+    THEATER
+    QUIZ
+    EXHIBITION
+    SPORT
+    TRAINING
+    QUEST
+    PARTY
+    OTHER
+}
