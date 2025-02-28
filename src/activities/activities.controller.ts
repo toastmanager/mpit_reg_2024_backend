@@ -65,7 +65,7 @@ export class ActivitiesController {
       throw new NotFoundException(`Activity with id ${id} not found`);
     }
 
-    if (activity.userId != +user.sub) {
+    if (activity.authorId != +user.sub) {
       throw new ForbiddenException(
         `You have to be author of activity to update it`,
       );
@@ -79,7 +79,7 @@ export class ActivitiesController {
     });
 
     if (!updatedActivity) {
-      throw new NotFoundException(`Event with id ${id} not found`);
+      throw new NotFoundException(`Activity with id ${id} not found`);
     }
 
     const activityDto = await this.activitiesService.getOneWithRelatedData({
@@ -97,13 +97,13 @@ export class ActivitiesController {
   })
   async create(
     @Request() req: any,
-    @Body() createEventDto: CreateActivityDto,
+    @Body() createActivityDto: CreateActivityDto,
   ): Promise<ActivityDto> {
     const { user } = req;
 
     const activity = await this.activitiesService.create({
       data: {
-        ...createEventDto,
+        ...createActivityDto,
         author: {
           connect: {
             id: +user.sub,
@@ -143,7 +143,7 @@ export class ActivitiesController {
       throw new NotFoundException(`Activity with id ${id} not found`);
     }
 
-    if (activity.userId != +user.sub) {
+    if (activity.authorId != +user.sub) {
       throw new ForbiddenException(
         `You have to be author of activity to delete it`,
       );

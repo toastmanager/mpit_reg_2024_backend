@@ -1,15 +1,19 @@
 model Activity {
-    id            Int          @id @default(autoincrement())
+    id            Int              @id @default(autoincrement())
     title         String
     description   String
-    mainPosterKey String       @default("") @map("main_poster_key")
+    mainPosterKey String           @default("") @map("main_poster_key")
     media         String[]
-    author        User         @relation(fields: [userId], references: [id])
+    authorId      Int              @map("author_id")
+    author        User             @relation(fields: [authorId], references: [id])
     type          ActivityType
+    price         Float
+    date          DateTime
+    paymentUrl    String           @map("payment_url")
+    reviews       ActivityReview[]
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
-    userId    Int
 
     @@map("activities")
 }
@@ -26,4 +30,17 @@ enum ActivityType {
     QUEST
     PARTY
     OTHER
+}
+
+model ActivityReview {
+    id         Int      @id @default(autoincrement())
+    score      Int // Min: 1, Max: 10
+    text       String   @default("")
+    authorId   Int      @map("author_id")
+    author     User     @relation(fields: [authorId], references: [id])
+    activityId Int      @map("activity_id")
+    activity   Activity @relation(fields: [activityId], references: [id])
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 }
