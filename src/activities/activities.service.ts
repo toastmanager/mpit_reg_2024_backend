@@ -6,11 +6,13 @@ import { ActivityDto } from './dto/activity.dto';
 import { ExtraPostersStorage } from './extra-posters.storage';
 import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
 import { UsersService } from '../users/users.service';
+import { ActivityReviewsService } from './reviews/activity-reviews.service';
 
 @Injectable()
 export class ActivitiesService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly activityReviewsService: ActivityReviewsService,
     private readonly mainPostersStorage: MainPostersStorage,
     private readonly extraPostersStorage: ExtraPostersStorage,
     private readonly usersService: UsersService,
@@ -48,6 +50,7 @@ export class ActivitiesService {
 
   async getActivityDto(args: { activity: Activity }): Promise<ActivityDto> {
     const { activity } = args;
+
     const mainPosterUrl = await this.mainPostersStorage.getUrl({
       objectKey: activity.mainPosterKey,
     });
@@ -55,10 +58,13 @@ export class ActivitiesService {
       objectKeys: activity.extraPostersKeys,
     });
 
+    const score = await this.calcScore({ id: activity.id });
+
     return {
       ...activity,
       mainPosterUrl: mainPosterUrl ?? '',
       extraPostersUrls: extraPostersUrls,
+      score: score,
     };
   }
 
@@ -208,5 +214,30 @@ export class ActivitiesService {
     }
 
     return dtos;
+  }
+
+  async calcScore(args: { id: number }): Promise<number> {
+    const { id } = args;
+
+    const reviews: { score: number }[] =
+      await this.activityReviewsService.findMany({
+        where: {
+          activity: {
+            id: id,
+          },
+        },
+        select: {
+          score: true,
+        },
+      });
+
+    const reviewsNum = reviews.length;
+    let sum = 0;
+    for (const review of reviews) {
+      sum += review.score;
+    }
+
+    const score = sum / reviewsNum;
+    return score;
   }
 }

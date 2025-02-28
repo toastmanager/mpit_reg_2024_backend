@@ -51,6 +51,10 @@ export class ActivityDto {
   date: Date;
 
   @ApiProperty()
+  @IsNumber()
+  score: number;
+
+  @ApiProperty()
   @IsISO8601()
   createdAt: Date;
 
