@@ -4,6 +4,7 @@ import { ActivitiesController } from './activities.controller';
 import { PrismaService } from '../prisma.service';
 import { MainPostersStorage } from './main-posters.storage';
 import { ExtraPostersStorage } from './extra-posters.storage';
+import { ActivityReviewsService } from './reviews/activity-reviews.service';
 
 @Module({
   controllers: [ActivitiesController],
@@ -12,6 +13,7 @@ import { ExtraPostersStorage } from './extra-posters.storage';
     PrismaService,
     MainPostersStorage,
     ExtraPostersStorage,
+    ActivityReviewsService,
   ],
 })
 export class ActivitiesModule {}

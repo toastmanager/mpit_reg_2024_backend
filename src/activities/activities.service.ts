@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { MainPostersStorage } from './main-posters.storage';
 import { Activity, Prisma } from '@prisma/client';
@@ -59,6 +55,7 @@ export class ActivitiesService {
     return {
       ...activity,
       mainPosterUrl: mainPosterUrl ?? '',
+      extraPostersUrls: extraPostersUrls,
     };
   }
 

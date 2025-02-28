@@ -29,6 +29,12 @@ export class ActivityDto {
   mainPosterUrl: string;
 
   @ApiProperty({
+    type: String,
+    isArray: true,
+  })
+  extraPostersUrls: string[];
+
+  @ApiProperty({
     enum: ActivityType,
   })
   @IsEnum(ActivityType)
