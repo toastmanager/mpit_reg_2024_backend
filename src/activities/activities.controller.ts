@@ -10,18 +10,32 @@ import {
   Post,
   Put,
   Request,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ActivitiesService } from './activities.service';
-import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { ActivityDto } from './dto/activity.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
+import { ExtraPostersStorage } from './extra-posters.storage';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MainPostersStorage } from './main-posters.storage';
 
 @Controller('activities')
 export class ActivitiesController {
-  constructor(private readonly activitiesService: ActivitiesService) {}
+  constructor(
+    private readonly activitiesService: ActivitiesService,
+    private readonly mainPostersStorage: MainPostersStorage,
+    private readonly extraPostersStorage: ExtraPostersStorage,
+  ) {}
 
   @Get()
   @ApiOkResponse({
@@ -55,17 +69,12 @@ export class ActivitiesController {
   ): Promise<ActivityDto> {
     const { user } = req;
 
-    const activity = await this.activitiesService.findUnique({
-      where: {
-        id: +id,
-      },
+    const isAuthor = await this.activitiesService.checkOwnership({
+      id: +id,
+      userId: +user.sub,
     });
 
-    if (!activity) {
-      throw new NotFoundException(`Activity with id ${id} not found`);
-    }
-
-    if (activity.authorId != +user.sub) {
+    if (!isAuthor) {
       throw new ForbiddenException(
         `You have to be author of activity to update it`,
       );
@@ -133,17 +142,13 @@ export class ActivitiesController {
   })
   async delete(@Request() req: any, @Param('id') id: string): Promise<String> {
     const { user } = req;
-    const activity = await this.activitiesService.findUnique({
-      where: {
-        id: +id,
-      },
+
+    const isAuthor = await this.activitiesService.checkOwnership({
+      id: +id,
+      userId: +user.sub,
     });
 
-    if (!activity) {
-      throw new NotFoundException(`Activity with id ${id} not found`);
-    }
-
-    if (activity.authorId != +user.sub) {
+    if (!isAuthor) {
       throw new ForbiddenException(
         `You have to be author of activity to delete it`,
       );
@@ -170,12 +175,54 @@ export class ActivitiesController {
   @ApiOkResponse({
     type: String,
   })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   async putMainPoster(
     @Request() req: any,
     @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<String> {
-    // TODO: Add main poster adding functionality as activity id
-    return '';
+    const { user } = req;
+
+    const isAuthor = await this.activitiesService.checkOwnership({
+      id: +id,
+      userId: +user.sub,
+    });
+
+    if (!isAuthor) {
+      throw new ForbiddenException(
+        `You have to be author of activity to put its main poster`,
+      );
+    }
+
+    const objectKey = await this.activitiesService.putMainPoster({
+      id: +id,
+      file: file,
+    });
+
+    const mainPosterUrl = await this.mainPostersStorage.getUrl({
+      objectKey,
+    });
+
+    if (!mainPosterUrl) {
+      throw new InternalServerErrorException(
+        'Failed to generate url for main poster',
+      );
+    }
+
+    return mainPosterUrl;
   }
 
   @Delete(':id/main-poster')
@@ -188,22 +235,80 @@ export class ActivitiesController {
     @Request() req: any,
     @Param('id') id: string,
   ): Promise<Boolean> {
-    // TODO: Add main poster deleting functionality by activity id
-    return false;
+    const { user } = req;
+
+    const isAuthor = await this.activitiesService.checkOwnership({
+      id: +id,
+      userId: +user.sub,
+    });
+
+    if (!isAuthor) {
+      throw new ForbiddenException(
+        `You have to be author of activity to remove its main poster`,
+      );
+    }
+
+    const isDeleted = await this.activitiesService.removeMainPoster({
+      id: +id,
+    });
+
+    return isDeleted;
   }
 
   @Post(':id/extra-posters')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBody({
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @ApiOkResponse({
     type: String,
   })
   async addExtraPoster(
     @Request() req: any,
     @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<String> {
-    // TODO: Add extra poster adding functionality
-    return '';
+    const { user } = req;
+
+    const isAuthor = await this.activitiesService.checkOwnership({
+      id: +id,
+      userId: +user.sub,
+    });
+
+    if (!isAuthor) {
+      throw new ForbiddenException(
+        `You have to be author of activity to add extra poster`,
+      );
+    }
+
+    const objectKey = await this.activitiesService.addExtraPoster({
+      id: +id,
+      file: file,
+    });
+
+    const extraPosterUrl = await this.extraPostersStorage.getUrl({
+      objectKey,
+    });
+
+    if (!extraPosterUrl) {
+      throw new InternalServerErrorException(
+        `Failed to generate url for extra poster with key ${objectKey}`,
+      );
+    }
+
+    return extraPosterUrl;
   }
 
   @Delete(':id/extra-posters/:poster_key')
@@ -217,7 +322,24 @@ export class ActivitiesController {
     @Param('id') id: string,
     @Param('poster_key') posterKey: string,
   ): Promise<Boolean> {
-    // TODO: Add extra poster removing functionality by key
-    return false;
+    const { user } = req;
+
+    const isAuthor = await this.activitiesService.checkOwnership({
+      id: +id,
+      userId: +user.sub,
+    });
+
+    if (!isAuthor) {
+      throw new ForbiddenException(
+        `You have to be author of activity to remove its extra poster`,
+      );
+    }
+
+    const isDeleted = await this.activitiesService.removeExtraPoster({
+      id: +id,
+      objectKey: posterKey,
+    });
+
+    return isDeleted;
   }
 }

@@ -1,16 +1,17 @@
 model Activity {
-    id            Int              @id @default(autoincrement())
-    title         String
-    description   String
-    mainPosterKey String           @default("") @map("main_poster_key")
-    extraPosters  String[]         @map("extra_posters")
-    authorId      Int              @map("author_id")
-    author        User             @relation(fields: [authorId], references: [id])
-    type          ActivityType
-    price         Float
-    date          DateTime
-    paymentUrl    String           @map("payment_url")
-    reviews       ActivityReview[]
+    id               Int              @id @default(autoincrement())
+    title            String
+    description      String
+    mainPosterKey    String           @default("") @map("main_poster_key")
+    extraPostersKeys String[]         @map("extra_posters")
+    authorId         Int              @map("author_id")
+    author           User             @relation(fields: [authorId], references: [id])
+    type             ActivityType
+    price            Float
+    date             DateTime
+    paymentUrl       String           @map("payment_url")
+    reviews          ActivityReview[]
+    tags             ActivityTag[]
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
@@ -43,4 +44,14 @@ model ActivityReview {
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("activity_reviews")
+}
+
+model ActivityTag {
+    id         Int        @id @default(autoincrement())
+    text       String
+    activities Activity[]
+
+    @@map("activity_tags")
 }

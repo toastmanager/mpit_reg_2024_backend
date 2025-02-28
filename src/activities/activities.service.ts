@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { MainPostersStorage } from './main-posters.storage';
 import { Activity, Prisma } from '@prisma/client';
@@ -48,6 +52,9 @@ export class ActivitiesService {
     const mainPosterUrl = await this.mainPostersStorage.getUrl({
       objectKey: activity.mainPosterKey,
     });
+    const extraPostersUrls = await this.extraPostersStorage.getUrls({
+      objectKeys: activity.extraPostersKeys,
+    });
 
     return {
       ...activity,
@@ -74,7 +81,7 @@ export class ActivitiesService {
   async putMainPoster(args: {
     id: number;
     file: Express.Multer.File;
-  }): Promise<String> {
+  }): Promise<string> {
     const { id, file } = args;
     const objectKey = await this.mainPostersStorage.put({
       filename: id.toString(),
@@ -83,7 +90,7 @@ export class ActivitiesService {
     return objectKey;
   }
 
-  async removeMainPoster(args: { id: number }): Promise<Boolean> {
+  async removeMainPoster(args: { id: number }): Promise<boolean> {
     const { id } = args;
     const isDeleted = await this.mainPostersStorage.delete({
       objectKey: id.toString(),
@@ -94,7 +101,7 @@ export class ActivitiesService {
   async addExtraPoster(args: {
     id: number;
     file: Express.Multer.File;
-  }): Promise<String> {
+  }): Promise<string> {
     const { id, file } = args;
     const objectKey = await this.extraPostersStorage.put({
       filename: file.filename,
@@ -106,7 +113,7 @@ export class ActivitiesService {
         id: id,
       },
       data: {
-        extraPosters: {
+        extraPostersKeys: {
           push: objectKey,
         },
       },
@@ -118,7 +125,7 @@ export class ActivitiesService {
   async removeExtraPoster(args: {
     id: number;
     objectKey: string;
-  }): Promise<Boolean> {
+  }): Promise<boolean> {
     const { id, objectKey } = args;
     const isDeleted = await this.extraPostersStorage.delete({
       objectKey: objectKey,
@@ -136,7 +143,7 @@ export class ActivitiesService {
           id: id,
         },
         data: {
-          extraPosters: activity!.extraPosters.filter(
+          extraPostersKeys: activity!.extraPostersKeys.filter(
             (extraPosterKey) => extraPosterKey != objectKey,
           ),
         },
@@ -144,5 +151,25 @@ export class ActivitiesService {
     }
 
     return isDeleted;
+  }
+
+  async checkOwnership(args: { id: number; userId: number }): Promise<boolean> {
+    const { id, userId } = args;
+
+    const activity = await this.findUnique({
+      where: {
+        id: +id,
+      },
+    });
+
+    if (!activity) {
+      throw new NotFoundException(`Activity with id ${id} not found`);
+    }
+
+    if (activity.authorId != userId) {
+      return false;
+    }
+
+    return true;
   }
 }
