@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { StorageRepository } from '../storage/storage';
 
 @Injectable()
-export class PostersStorage extends StorageRepository {
+export class ExtraPostersStorage extends StorageRepository {
   protected getBucketName(): string {
-    return 'posters';
+    return 'extra-posters';
   }
 }

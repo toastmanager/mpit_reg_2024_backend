@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ActivitiesService } from './activities.service';
-import { PostersStorage } from './posters.storage';
+import { MainPostersStorage } from './main-posters.storage';
 import { PrismaService } from '../prisma.service';
 import { PrismaClient } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
+import { ExtraPostersStorage } from './extra-posters.storage';
 
 describe('EventsService', () => {
   let service: ActivitiesService;
@@ -11,12 +12,19 @@ describe('EventsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ActivitiesService, PrismaService, PostersStorage],
+      providers: [
+        ActivitiesService,
+        PrismaService,
+        MainPostersStorage,
+        ExtraPostersStorage,
+      ],
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
-      .overrideProvider(PostersStorage)
-      .useValue(mockDeep<PostersStorage>())
+      .overrideProvider(MainPostersStorage)
+      .useValue(mockDeep<MainPostersStorage>())
+      .overrideProvider(ExtraPostersStorage)
+      .useValue(mockDeep<ExtraPostersStorage>())
       .compile();
 
     service = module.get<ActivitiesService>(ActivitiesService);

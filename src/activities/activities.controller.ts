@@ -35,7 +35,7 @@ export class ActivitiesController {
       return [];
     }
 
-    const activitiesDtos = await this.activitiesService.getManyWithRelatedData({
+    const activitiesDtos = await this.activitiesService.getActivitiesDto({
       activities,
     });
 
@@ -82,7 +82,7 @@ export class ActivitiesController {
       throw new NotFoundException(`Activity with id ${id} not found`);
     }
 
-    const activityDto = await this.activitiesService.getOneWithRelatedData({
+    const activityDto = await this.activitiesService.getActivityDto({
       activity: updatedActivity,
     });
 
@@ -118,7 +118,7 @@ export class ActivitiesController {
       );
     }
 
-    const activityDto = await this.activitiesService.getOneWithRelatedData({
+    const activityDto = await this.activitiesService.getActivityDto({
       activity,
     });
 
@@ -162,5 +162,62 @@ export class ActivitiesController {
     }
 
     return 'Activity successfully deleted';
+  }
+
+  @Put(':id/main-poster')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: String,
+  })
+  async putMainPoster(
+    @Request() req: any,
+    @Param('id') id: string,
+  ): Promise<String> {
+    // TODO: Add main poster adding functionality as activity id
+    return '';
+  }
+
+  @Delete(':id/main-poster')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: Boolean,
+  })
+  async removeMainPoster(
+    @Request() req: any,
+    @Param('id') id: string,
+  ): Promise<Boolean> {
+    // TODO: Add main poster deleting functionality by activity id
+    return false;
+  }
+
+  @Post(':id/extra-posters')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: String,
+  })
+  async addExtraPoster(
+    @Request() req: any,
+    @Param('id') id: string,
+  ): Promise<String> {
+    // TODO: Add extra poster adding functionality
+    return '';
+  }
+
+  @Delete(':id/extra-posters/:poster_key')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: Boolean,
+  })
+  async removeExtraPoster(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Param('poster_key') posterKey: string,
+  ): Promise<Boolean> {
+    // TODO: Add extra poster removing functionality by key
+    return false;
   }
 }

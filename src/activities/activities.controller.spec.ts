@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ActivitiesController } from './activities.controller';
 import { ActivitiesService } from './activities.service';
-import { PostersStorage } from './posters.storage';
+import { MainPostersStorage } from './main-posters.storage';
 import { PrismaService } from '../prisma.service';
 import { mockDeep } from 'jest-mock-extended';
 import { PrismaClient } from '@prisma/client';
+import { ExtraPostersStorage } from './extra-posters.storage';
 
 describe('EventsController', () => {
   let controller: ActivitiesController;
@@ -13,12 +14,19 @@ describe('EventsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ActivitiesController],
-      providers: [ActivitiesService, PrismaService, PostersStorage],
+      providers: [
+        ActivitiesService,
+        PrismaService,
+        MainPostersStorage,
+        ExtraPostersStorage,
+      ],
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
-      .overrideProvider(PostersStorage)
-      .useValue(mockDeep<PostersStorage>())
+      .overrideProvider(MainPostersStorage)
+      .useValue(mockDeep<MainPostersStorage>())
+      .overrideProvider(ExtraPostersStorage)
+      .useValue(mockDeep<ExtraPostersStorage>())
       .compile();
 
     controller = module.get<ActivitiesController>(ActivitiesController);

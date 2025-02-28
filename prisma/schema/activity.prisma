@@ -3,7 +3,7 @@ model Activity {
     title         String
     description   String
     mainPosterKey String           @default("") @map("main_poster_key")
-    media         String[]
+    extraPosters  String[]         @map("extra_posters")
     authorId      Int              @map("author_id")
     author        User             @relation(fields: [authorId], references: [id])
     type          ActivityType
