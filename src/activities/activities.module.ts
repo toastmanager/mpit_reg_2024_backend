@@ -5,12 +5,16 @@ import { PrismaService } from '../prisma.service';
 import { MainPostersStorage } from './main-posters.storage';
 import { ExtraPostersStorage } from './extra-posters.storage';
 import { ActivityReviewsService } from './reviews/activity-reviews.service';
+import { UsersService } from '../users/users.service';
+import { AvatarsStorage } from '../users/avatars.storage';
 
 @Module({
   controllers: [ActivitiesController],
   providers: [
     ActivitiesService,
     PrismaService,
+    UsersService,
+    AvatarsStorage,
     MainPostersStorage,
     ExtraPostersStorage,
     ActivityReviewsService,

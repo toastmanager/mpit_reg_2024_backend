@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { MainPostersStorage } from './main-posters.storage';
-import { Activity, Prisma } from '@prisma/client';
+import { Activity, ActivityReview, Prisma } from '@prisma/client';
 import { ActivityDto } from './dto/activity.dto';
 import { ExtraPostersStorage } from './extra-posters.storage';
+import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class ActivitiesService {
@@ -11,6 +13,7 @@ export class ActivitiesService {
     private readonly prisma: PrismaService,
     private readonly mainPostersStorage: MainPostersStorage,
     private readonly extraPostersStorage: ExtraPostersStorage,
+    private readonly usersService: UsersService,
   ) {}
 
   async create(args: Prisma.ActivityCreateArgs) {
@@ -168,5 +171,42 @@ export class ActivitiesService {
     }
 
     return true;
+  }
+
+  async getActivityReviewDto(args: {
+    activityReview: ActivityReview;
+  }): Promise<ActivityReviewDto> {
+    const { activityReview } = args;
+
+    const author = await this.usersService.findUnique({
+      where: {
+        id: activityReview.authorId,
+      },
+    });
+
+    const userDto = await this.usersService.userWithRelatedData({
+      user: author!,
+    });
+
+    return {
+      ...activityReview,
+      author: userDto,
+    };
+  }
+
+  async getActivityReviewesDtos(args: {
+    activityReviews: ActivityReview[];
+  }): Promise<ActivityReviewDto[]> {
+    const { activityReviews } = args;
+
+    const dtos: ActivityReviewDto[] = [];
+    for (const review of activityReviews) {
+      const reviewDto = await this.getActivityReviewDto({
+        activityReview: review,
+      });
+      dtos.push(reviewDto);
+    }
+
+    return dtos;
   }
 }

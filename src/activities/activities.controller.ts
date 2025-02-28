@@ -28,11 +28,15 @@ import { UpdateActivityDto } from './dto/update-activity.dto';
 import { ExtraPostersStorage } from './extra-posters.storage';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MainPostersStorage } from './main-posters.storage';
+import { ActivityReviewsService } from './reviews/activity-reviews.service';
+import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
+import { CreateActivityReviewDto } from './reviews/dto/create-activity-review.dto';
 
 @Controller('activities')
 export class ActivitiesController {
   constructor(
     private readonly activitiesService: ActivitiesService,
+    private readonly activitiyReviewsService: ActivityReviewsService,
     private readonly mainPostersStorage: MainPostersStorage,
     private readonly extraPostersStorage: ExtraPostersStorage,
   ) {}
@@ -341,5 +345,64 @@ export class ActivitiesController {
     });
 
     return isDeleted;
+  }
+
+  @Get(':id/reviews')
+  @ApiOkResponse({
+    type: ActivityReviewDto,
+    isArray: true,
+  })
+  async findActivityReviews(
+    @Param('id') id: string,
+  ): Promise<ActivityReviewDto[]> {
+    const reviews = await this.activitiyReviewsService.findMany({
+      where: {
+        activity: {
+          id: +id,
+        },
+      },
+    });
+
+    const reviewsDtos = this.activitiesService.getActivityReviewesDtos({
+      activityReviews: reviews,
+    });
+
+    return reviewsDtos;
+  }
+
+  @Post(':id/reviews')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: ActivityReviewDto,
+  })
+  async createActivityReviews(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() createActivityReviewDto: CreateActivityReviewDto,
+  ): Promise<ActivityReviewDto> {
+    const { user } = req;
+
+    const review = await this.activitiyReviewsService.create({
+      data: {
+        ...createActivityReviewDto,
+        activity: {
+          connect: {
+            id: +id,
+          },
+        },
+        author: {
+          connect: {
+            id: +user.sub,
+          },
+        },
+      },
+    });
+
+    const reviewDto = await this.activitiesService.getActivityReviewDto({
+      activityReview: review,
+    });
+
+    return reviewDto;
   }
 }

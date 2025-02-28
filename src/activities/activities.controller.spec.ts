@@ -6,6 +6,9 @@ import { PrismaService } from '../prisma.service';
 import { mockDeep } from 'jest-mock-extended';
 import { PrismaClient } from '@prisma/client';
 import { ExtraPostersStorage } from './extra-posters.storage';
+import { UsersService } from '../users/users.service';
+import { ActivityReviewsService } from './reviews/activity-reviews.service';
+import { AvatarsStorage } from '../users/avatars.storage';
 
 describe('EventsController', () => {
   let controller: ActivitiesController;
@@ -16,6 +19,9 @@ describe('EventsController', () => {
       controllers: [ActivitiesController],
       providers: [
         ActivitiesService,
+        ActivityReviewsService,
+        AvatarsStorage,
+        UsersService,
         PrismaService,
         MainPostersStorage,
         ExtraPostersStorage,
@@ -23,6 +29,8 @@ describe('EventsController', () => {
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
+      .overrideProvider(AvatarsStorage)
+      .useValue(mockDeep<AvatarsStorage>())
       .overrideProvider(MainPostersStorage)
       .useValue(mockDeep<MainPostersStorage>())
       .overrideProvider(ExtraPostersStorage)
