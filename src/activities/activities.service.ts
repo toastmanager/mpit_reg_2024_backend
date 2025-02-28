@@ -338,10 +338,12 @@ export class ActivitiesService {
       {
         title: 'События в ближайшие дни',
         activities: [...comingActivities],
+        isHorizontal: true,
       },
       {
         title: 'Уже в кино',
         activities: [...comingMovies],
+        isHorizontal: false,
       },
     ];
   }

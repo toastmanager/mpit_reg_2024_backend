@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 import { ActivityDto } from './activity.dto';
 
 export class CategoryDto {
@@ -12,4 +12,10 @@ export class CategoryDto {
     isArray: true,
   })
   activities: ActivityDto[];
+
+  @ApiProperty({
+    default: true,
+  })
+  @IsBoolean()
+  isHorizontal: boolean = true;
 }
