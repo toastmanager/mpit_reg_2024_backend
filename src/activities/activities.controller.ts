@@ -34,6 +34,7 @@ import { ActivityReviewsService } from './reviews/activity-reviews.service';
 import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
 import { CreateActivityReviewDto } from './reviews/dto/create-activity-review.dto';
 import { CategoryDto } from './dto/category.dto';
+import { ActivityType } from '@prisma/client';
 
 @Controller('activities')
 export class ActivitiesController {
@@ -67,13 +68,43 @@ export class ActivitiesController {
     type: Date,
     required: false,
   })
+  @ApiQuery({
+    name: 'min_price',
+    type: Number,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'max_price',
+    type: Number,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'types',
+    type: Array<typeof ActivityType>,
+    required: false,
+  })
   async findAll(
     @Query('search') search?: string,
     @Query('sorting') sorting?: string,
     @Query('start') start?: Date,
     @Query('end') end?: Date,
+    @Query('min_price') minPriceQuery?: string,
+    @Query('max_price') maxPriceQuery?: string,
+    @Query('types') typesQuery?: string[] | string,
   ): Promise<ActivityDto[]> {
-    //TODO: add dates filter
+    let types: ActivityType[] | undefined;
+    if (typeof typesQuery === 'string') {
+      types = [ActivityType[typesQuery as keyof typeof ActivityType]];
+    } else if (Array.isArray(typesQuery)) {
+      types = typesQuery.map(
+        (type) => ActivityType[type as keyof typeof ActivityType],
+      );
+    } else {
+      types = undefined;
+    }
+    const minPrice = Number(minPriceQuery);
+    const maxPrice = Number(maxPriceQuery);
+
     const activities = await this.activitiesService.findMany({
       where: {
         OR:
@@ -97,6 +128,10 @@ export class ActivitiesController {
                       },
                     },
               ],
+        price: {
+          gte: !minPrice ? undefined : minPrice,
+          lte: !maxPrice ? undefined : maxPrice,
+        },
         dates: {
           some: {
             date: {
@@ -104,6 +139,9 @@ export class ActivitiesController {
               lte: end,
             },
           },
+        },
+        type: {
+          in: types,
         },
       },
       orderBy: {
