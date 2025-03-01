@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Request,
   UploadedFile,
   UseGuards,
@@ -20,6 +21,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOkResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ActivityDto } from './dto/activity.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -47,10 +49,63 @@ export class ActivitiesController {
     type: ActivityDto,
     isArray: true,
   })
-  async findAll(): Promise<ActivityDto[]> {
-    const activities = await this.activitiesService.findMany();
+  @ApiQuery({
+    name: 'search',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'sorting',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'start',
+    type: Date,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'end',
+    type: Date,
+    required: false,
+  })
+  async findAll(
+    @Query('search') search?: string,
+    @Query('sorting') sorting?: string,
+    @Query('start') start?: Date,
+    @Query('end') end?: Date,
+  ): Promise<ActivityDto[]> {
+    //TODO: add dates filter
+    const activities = await this.activitiesService.findMany({
+      where: {
+        OR:
+          !search || search == ''
+            ? undefined
+            : [
+                !search || search == ''
+                  ? {}
+                  : {
+                      title: {
+                        mode: 'insensitive',
+                        search: search.toLowerCase(),
+                      },
+                    },
+                !search || search == ''
+                  ? {}
+                  : {
+                      description: {
+                        mode: 'insensitive',
+                        search: search.toLowerCase(),
+                      },
+                    },
+              ],
+      },
+      orderBy: {
+        updatedAt: sorting == 'update_date' ? 'asc' : undefined,
+        price: sorting == 'price' ? 'asc' : undefined,
+      },
+    });
 
     if (!activities) {
+      console.log('empty activities list');
       return [];
     }
 
