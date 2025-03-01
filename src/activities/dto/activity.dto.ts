@@ -1,13 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ActivityType } from '@prisma/client';
-import {
-  IsDecimal,
-  IsEnum,
-  IsInt,
-  IsISO8601,
-  IsNumber,
-  IsString,
-} from 'class-validator';
+import { IsEnum, IsInt, IsISO8601, IsNumber, IsString } from 'class-validator';
 
 export class ActivityDto {
   @ApiProperty()

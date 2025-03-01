@@ -1,0 +1,9 @@
+model Group {
+    id         Int        @id @default(autoincrement())
+    title      String
+    activities Activity[]
+    authorId   Int        @map("author_id")
+    author     User       @relation(fields: [authorId], references: [id])
+
+    @@map("groups")
+}
