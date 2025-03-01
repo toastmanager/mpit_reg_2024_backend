@@ -46,6 +46,17 @@ export class ActivitiesController {
     private readonly extraPostersStorage: ExtraPostersStorage,
   ) {}
 
+  @Get('categories')
+  @ApiOkResponse({
+    type: CategoryDto,
+    isArray: true,
+  })
+  async findAllCategories(): Promise<CategoryDto[]> {
+    const categories = await this.activitiesService.getCategories();
+
+    return categories;
+  }
+
   @Get()
   @ApiOkResponse({
     type: ActivityDto,
@@ -178,7 +189,7 @@ export class ActivitiesController {
       throw new NotFoundException(`Activity with id ${id} is not found`);
     }
 
-    const activityDto = await this.activitiesService.getActivityDto({
+    const activityDto = await this.activitiesService.getActivityDetailsDto({
       activity: activity,
     });
 
@@ -529,16 +540,5 @@ export class ActivitiesController {
     });
 
     return reviewDto;
-  }
-
-  @Get('categories')
-  @ApiOkResponse({
-    type: CategoryDto,
-    isArray: true,
-  })
-  async findAllCategories(): Promise<CategoryDto[]> {
-    const categories = await this.activitiesService.getCategories();
-
-    return categories;
   }
 }

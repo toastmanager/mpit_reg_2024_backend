@@ -8,6 +8,7 @@ import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
 import { UsersService } from '../users/users.service';
 import { ActivityReviewsService } from './reviews/activity-reviews.service';
 import { CategoryDto } from './dto/category.dto';
+import { ActivityDetailsDto } from './dto/activity-details.dto';
 
 @Injectable()
 export class ActivitiesService {
@@ -90,10 +91,10 @@ export class ActivitiesService {
   async getActivitiesDto(args: {
     activities: Activity[];
   }): Promise<ActivityDto[]> {
-    const { activities: activties } = args;
+    const { activities } = args;
 
     const res: ActivityDto[] = [];
-    for (const activity of activties) {
+    for (const activity of activities) {
       const activityWithRelatedData = await this.getActivityDto({
         activity,
       });
@@ -101,6 +102,30 @@ export class ActivitiesService {
     }
 
     return res;
+  }
+
+  async getActivityDetailsDto(args: {
+    activity: Activity;
+  }): Promise<ActivityDetailsDto> {
+    const { activity } = args;
+
+    const activityDto = await this.getActivityDto({
+      activity: activity,
+    });
+
+    const dates = await this.prisma.activityDate.findMany({
+      where: {
+        activityId: activity.id,
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+
+    return {
+      ...activityDto,
+      dates,
+    };
   }
 
   async putMainPoster(args: {
