@@ -35,6 +35,7 @@ import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
 import { CreateActivityReviewDto } from './reviews/dto/create-activity-review.dto';
 import { CategoryDto } from './dto/category.dto';
 import { ActivityType } from '@prisma/client';
+import { ActivityDetailsDto } from './dto/activity-details.dto';
 
 @Controller('activities')
 export class ActivitiesController {
@@ -160,6 +161,28 @@ export class ActivitiesController {
     });
 
     return activitiesDtos;
+  }
+
+  @Get(':id')
+  @ApiOkResponse({
+    type: ActivityDetailsDto,
+  })
+  async findOne(@Param('id') id: string): Promise<ActivityDetailsDto> {
+    const activity = await this.activitiesService.findUnique({
+      where: {
+        id: +id,
+      },
+    });
+
+    if (!activity) {
+      throw new NotFoundException(`Activity with id ${id} is not found`);
+    }
+
+    const activityDto = await this.activitiesService.getActivityDto({
+      activity: activity,
+    });
+
+    return activityDto;
   }
 
   @Put(':id')
