@@ -97,6 +97,14 @@ export class ActivitiesController {
                       },
                     },
               ],
+        dates: {
+          some: {
+            date: {
+              gte: start,
+              lte: end,
+            },
+          },
+        },
       },
       orderBy: {
         updatedAt: sorting == 'update_date' ? 'asc' : undefined,
