@@ -67,13 +67,27 @@ export class ActivitiesController {
     type: Date,
     required: false,
   })
+  @ApiQuery({
+    name: 'min_price',
+    type: Number,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'max_price',
+    type: Number,
+    required: false,
+  })
   async findAll(
     @Query('search') search?: string,
     @Query('sorting') sorting?: string,
     @Query('start') start?: Date,
     @Query('end') end?: Date,
+    @Query('min_price') minPriceQuery?: string,
+    @Query('max_price') maxPriceQuery?: string,
   ): Promise<ActivityDto[]> {
-    //TODO: add dates filter
+    const minPrice = Number(minPriceQuery);
+    const maxPrice = Number(maxPriceQuery);
+
     const activities = await this.activitiesService.findMany({
       where: {
         OR:
@@ -97,6 +111,10 @@ export class ActivitiesController {
                       },
                     },
               ],
+        price: {
+          gte: !minPrice ? undefined : minPrice,
+          lte: !maxPrice ? undefined : maxPrice,
+        },
         dates: {
           some: {
             date: {
