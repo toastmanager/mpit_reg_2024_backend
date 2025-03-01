@@ -34,6 +34,7 @@ import { ActivityReviewsService } from './reviews/activity-reviews.service';
 import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
 import { CreateActivityReviewDto } from './reviews/dto/create-activity-review.dto';
 import { CategoryDto } from './dto/category.dto';
+import { ActivityType } from '@prisma/client';
 
 @Controller('activities')
 export class ActivitiesController {
@@ -77,6 +78,11 @@ export class ActivitiesController {
     type: Number,
     required: false,
   })
+  @ApiQuery({
+    name: 'types',
+    type: Array<typeof ActivityType>,
+    required: false,
+  })
   async findAll(
     @Query('search') search?: string,
     @Query('sorting') sorting?: string,
@@ -84,7 +90,18 @@ export class ActivitiesController {
     @Query('end') end?: Date,
     @Query('min_price') minPriceQuery?: string,
     @Query('max_price') maxPriceQuery?: string,
+    @Query('types') typesQuery?: string[] | string,
   ): Promise<ActivityDto[]> {
+    let types: ActivityType[] | undefined;
+    if (typeof typesQuery === 'string') {
+      types = [ActivityType[typesQuery as keyof typeof ActivityType]];
+    } else if (Array.isArray(typesQuery)) {
+      types = typesQuery.map(
+        (type) => ActivityType[type as keyof typeof ActivityType],
+      );
+    } else {
+      types = undefined;
+    }
     const minPrice = Number(minPriceQuery);
     const maxPrice = Number(maxPriceQuery);
 
@@ -122,6 +139,9 @@ export class ActivitiesController {
               lte: end,
             },
           },
+        },
+        type: {
+          in: types,
         },
       },
       orderBy: {
