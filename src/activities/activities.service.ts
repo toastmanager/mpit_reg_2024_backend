@@ -364,7 +364,7 @@ export class ActivitiesService {
         activity: movie,
       });
       comingMovies.push(activityDto);
-      comingActivitiesIds.add(movie.id);
+      comingMoviesIds.add(movie.id);
     }
 
     return [
