@@ -36,6 +36,10 @@ import { CreateActivityReviewDto } from './reviews/dto/create-activity-review.dt
 import { CategoryDto } from './dto/category.dto';
 import { ActivityType } from '@prisma/client';
 import { ActivityDetailsDto } from './dto/activity-details.dto';
+import { GroupDto } from './dto/group.dto';
+import { CreateGroupDto } from './dto/create-group.dto';
+import { AddToGroupDto } from './dto/add-to-group.dto';
+import { DeleteFromGroupDto } from './dto/delete-from-group.dto';
 
 @Controller('activities')
 export class ActivitiesController {
@@ -53,8 +57,162 @@ export class ActivitiesController {
   })
   async findAllCategories(): Promise<CategoryDto[]> {
     const categories = await this.activitiesService.getCategories();
-
     return categories;
+  }
+
+  @Get('groups/me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: GroupDto,
+    isArray: true,
+  })
+  async findAllGroups(@Request() req: any): Promise<GroupDto[]> {
+    const { user } = req;
+
+    const groups = await this.activitiesService.findManyGroups({
+      where: {
+        authorId: +user.sub,
+      },
+    });
+
+    const groupDtos = await this.activitiesService.getGroupDtos({
+      groups,
+    });
+
+    return groupDtos;
+  }
+
+  @Post('groups')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: GroupDto,
+  })
+  async createGroup(
+    @Request() req: any,
+    @Body() createGroupDto: CreateGroupDto,
+  ): Promise<GroupDto> {
+    const { user } = req;
+
+    const group = await this.activitiesService.createGroup({
+      data: {
+        ...createGroupDto,
+        author: {
+          connect: {
+            id: +user.sub,
+          },
+        },
+      },
+    });
+
+    if (!group) {
+      throw new InternalServerErrorException('Failed to create group');
+    }
+
+    const groupDto = await this.activitiesService.getGroupDto({
+      group,
+    });
+
+    return groupDto;
+  }
+
+  @Post('groups/:id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: GroupDto,
+  })
+  async addToGroup(
+    @Request() req: any,
+    @Param('id') groupId: string,
+    @Body() addToGroupDto: AddToGroupDto,
+  ): Promise<GroupDto> {
+    const { user } = req;
+
+    const group = await this.activitiesService.findUniqueGroup({
+      where: {
+        id: +groupId,
+      },
+    });
+
+    if (!group) {
+      throw new NotFoundException(`Group with id ${groupId} not found`);
+    }
+
+    if (group.authorId != +user.sub) {
+      throw new ForbiddenException(
+        `You have to be author of group to add activity to it`,
+      );
+    }
+
+    const updatedGroup = await this.activitiesService.updateGroup({
+      where: {
+        id: +groupId,
+      },
+      data: {
+        activities: {
+          connect: {
+            id: addToGroupDto.id,
+          },
+        },
+      },
+    });
+
+    const updatedGroupDto = await this.activitiesService.getGroupDto({
+      group: updatedGroup,
+    });
+
+    return updatedGroupDto;
+  }
+
+  @Post('groups/:id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    type: GroupDto,
+  })
+  async deleteFromGroup(
+    @Request() req: any,
+    @Param('id') groupId: string,
+    @Body() deleteFromGroupDto: DeleteFromGroupDto,
+  ): Promise<GroupDto> {
+    const { user } = req;
+
+    const group = await this.activitiesService.findUniqueGroup({
+      where: {
+        id: +groupId,
+      },
+    });
+
+    if (!group) {
+      throw new NotFoundException(`Group with id ${groupId} not found`);
+    }
+
+    if (group.authorId != +user.sub) {
+      throw new ForbiddenException(
+        `You have to be author of group to remove activity from it`,
+      );
+    }
+
+    const updatedGroup = await this.activitiesService.updateGroup({
+      where: {
+        id: +groupId,
+      },
+      data: {
+        activities: {
+          disconnect: {
+            id: deleteFromGroupDto.id,
+          },
+        },
+      },
+    });
+
+    const updatedGroupDto = await this.activitiesService.getGroupDto({
+      group: updatedGroup,
+    });
+
+    return updatedGroupDto;
   }
 
   @Get()

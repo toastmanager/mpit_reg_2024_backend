@@ -1,7 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { MainPostersStorage } from './main-posters.storage';
-import { Activity, ActivityReview, ActivityType, Prisma } from '@prisma/client';
+import {
+  Activity,
+  ActivityReview,
+  ActivityType,
+  Group,
+  Prisma,
+} from '@prisma/client';
 import { ActivityDto } from './dto/activity.dto';
 import { ExtraPostersStorage } from './extra-posters.storage';
 import { ActivityReviewDto } from './reviews/dto/activity-review.dto';
@@ -9,6 +15,8 @@ import { UsersService } from '../users/users.service';
 import { ActivityReviewsService } from './reviews/activity-reviews.service';
 import { CategoryDto } from './dto/category.dto';
 import { ActivityDetailsDto } from './dto/activity-details.dto';
+import { GroupDto } from './dto/group.dto';
+import { zip } from 'rxjs';
 
 @Injectable()
 export class ActivitiesService {
@@ -26,8 +34,8 @@ export class ActivitiesService {
   }
 
   async findMany(args?: Prisma.ActivityFindManyArgs) {
-    const activitys = await this.prisma.activity.findMany(args);
-    return activitys;
+    const activities = await this.prisma.activity.findMany(args);
+    return activities;
   }
 
   async findFirst(args?: Prisma.ActivityFindFirstArgs) {
@@ -371,5 +379,64 @@ export class ActivitiesService {
         isHorizontal: false,
       },
     ];
+  }
+
+  async findManyGroups(args?: Prisma.GroupFindManyArgs): Promise<Group[]> {
+    const groups = await this.prisma.group.findMany(args);
+
+    return groups;
+  }
+
+  async findUniqueGroup(
+    args: Prisma.GroupFindUniqueArgs,
+  ): Promise<Group | null> {
+    const group = await this.prisma.group.findUnique(args);
+    return group;
+  }
+
+  async updateGroup(args: Prisma.GroupUpdateArgs) {
+    const group = await this.prisma.group.update(args);
+    return group;
+  }
+
+  async createGroup(args: Prisma.GroupCreateArgs) {
+    const createdGroup = await this.prisma.group.create(args);
+    return createdGroup;
+  }
+
+  async getGroupDtos(args: { groups: Group[] }): Promise<GroupDto[]> {
+    const { groups } = args;
+
+    const groupDtos: GroupDto[] = [];
+    for (const group of groups) {
+      const groupDto = await this.getGroupDto({
+        group,
+      });
+      groupDtos.push(groupDto);
+    }
+
+    return groupDtos;
+  }
+
+  async getGroupDto(args: { group: Group }): Promise<GroupDto> {
+    const { group } = args;
+
+    const activities = await this.findMany({
+      where: {
+        groups: {
+          some: {
+            id: group.id,
+          },
+        },
+      },
+    });
+
+    const activityDtos = await this.getActivitiesDto({
+      activities,
+    });
+
+    const groupDto = { ...group, activities: activityDtos };
+
+    return groupDto;
   }
 }
