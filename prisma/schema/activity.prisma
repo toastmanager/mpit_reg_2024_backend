@@ -1,0 +1,63 @@
+model Activity {
+    id               Int              @id @default(autoincrement())
+    title            String
+    description      String
+    extraPostersKeys String[]         @map("extra_posters")
+    authorId         Int              @map("author_id")
+    author           User             @relation(fields: [authorId], references: [id])
+    type             ActivityType
+    price            Float
+    dates            ActivityDate[]
+    paymentUrl       String           @map("payment_url")
+    reviews          ActivityReview[]
+    tags             ActivityTag[]
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("activities")
+}
+
+model ActivityDate {
+    id         Int      @id @default(autoincrement())
+    activityId Int
+    activity   Activity @relation(fields: [activityId], references: [id])
+    date       DateTime
+}
+
+enum ActivityType {
+    MOVIE
+    MASTER_CLASS
+    CONCERT
+    THEATER
+    QUIZ
+    EXHIBITION
+    SPORT
+    TRAINING
+    QUEST
+    PARTY
+    OTHER
+}
+
+model ActivityReview {
+    id         Int      @id @default(autoincrement())
+    score      Int // Min: 1, Max: 10
+    text       String   @default("")
+    authorId   Int      @map("author_id")
+    author     User     @relation(fields: [authorId], references: [id])
+    activityId Int      @map("activity_id")
+    activity   Activity @relation(fields: [activityId], references: [id])
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("activity_reviews")
+}
+
+model ActivityTag {
+    id         Int        @id @default(autoincrement())
+    text       String
+    activities Activity[]
+
+    @@map("activity_tags")
+}
