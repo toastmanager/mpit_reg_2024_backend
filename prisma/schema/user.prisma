@@ -1,11 +1,13 @@
 model User {
     id Int @id @default(autoincrement())
 
-    username     String  @unique
-    email        String  @unique
-    passwordHash String  @map("password_hash")
-    isActive     Boolean @default(true) @map("is_active")
+    username     String           @unique
+    email        String           @unique
+    passwordHash String           @map("password_hash")
+    isActive     Boolean          @default(true) @map("is_active")
     roles        Role[]
+    activities   Activity[]
+    reviews      ActivityReview[]
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")

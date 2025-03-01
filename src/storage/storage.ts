@@ -44,10 +44,12 @@ export abstract class StorageRepository {
           new CreateBucketCommand({ Bucket: this.bucketName }),
         );
         console.log(`Bucket ${this.bucketName} created.`);
+        return;
       } else if (error.name === '403') {
         console.error(
           'Access to S3 storage is forbidden. It may appear if S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY environment variables are invalid',
         );
+        return;
       } else {
         console.error(
           `Unexpected error after trying to ensure S3 bucket existence. Bucket name: ${this.bucketName}`,
