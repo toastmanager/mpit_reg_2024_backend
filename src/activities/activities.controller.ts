@@ -166,7 +166,7 @@ export class ActivitiesController {
     return updatedGroupDto;
   }
 
-  @Post('groups/:id')
+  @Delete('groups/:id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({
