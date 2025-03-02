@@ -1,6 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ActivityType } from '@prisma/client';
-import { IsEnum, IsInt, IsISO8601, IsNumber, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsISO8601,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class ActivityDto {
   @ApiProperty()
@@ -26,6 +33,11 @@ export class ActivityDto {
     isArray: true,
   })
   extraPostersUrls: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  paymentUrl: string;
 
   @ApiProperty({
     enum: ActivityType,
