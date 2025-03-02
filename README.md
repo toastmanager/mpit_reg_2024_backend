@@ -20,6 +20,8 @@
 - [Passport.js](https://www.prisma.io/) - библиотека для аутентификации
 - [@nestjs/swagger](https://github.com/nestjs/swagger) - модуль для поддержки OpenAPI (Swagger) в Nest.js
 - [@itgorillaz/configify](https://github.com/it-gorillaz/configify) - библиотека для упрощённого создания класса конфигурации для Nest.js
+- [Docker](https://docker.com) - контейнеризация
+- [Caddy](https://caddyserver.com/) - веб-сервер
 
 ## 📦 Установка
 
