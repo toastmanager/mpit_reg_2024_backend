@@ -305,7 +305,7 @@ export class ActivitiesController {
         dates: {
           some: {
             date: {
-              gte: start,
+              gte: start ?? new Date(),
               lte: end,
             },
           },
